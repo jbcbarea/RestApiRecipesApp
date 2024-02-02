@@ -8,21 +8,21 @@ const path = require("path");
 const getRecipes = async (req, res) => {
   try {
     // Realiza una consulta a la base de datos para obtener las recetas con campos específicos
-    const recipes = await db.any(`
-      SELECT id,nombrereceta, tipo_receta, tiempo_preparacion, dificultad, puntuacion, comensales, imagenreceta
-      FROM recetas
-    `);
+    //const recipes = await db.any(`
+    //  SELECT id,nombrereceta, tipo_receta, tiempo_preparacion, dificultad, puntuacion, comensales, imagenreceta
+    //  FROM recetas
+    //`);
 
     // Modifica el JSON para incluir las rutas completas de las imágenes
-    const serverUrl = "http://localhost:3000"; // Cambia esto por la URL real de tu servidor
-    const recipesWithImageUrls = recipes.map((recipe) => {
-      return {
-        ...recipe,
-        imagenreceta: `${serverUrl}/${recipe.imagenreceta}`, // Modificado aquí
-      };
-    });
-
-    res.json(recipesWithImageUrls);
+    //const serverUrl = "http://localhost:3000"; // Cambia esto por la URL real de tu servidor
+    //const recipesWithImageUrls = recipes.map((recipe) => {
+    //  return {
+    //    ...recipe,
+    //    imagenreceta: `${serverUrl}/${recipe.imagenreceta}`, // Modificado aquí
+    //  };
+    //});
+    //res.json(recipesWithImageUrls);
+    res.json({prueba:'dfjksdjf',prueba2: 234});
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error en la base de datos" });
