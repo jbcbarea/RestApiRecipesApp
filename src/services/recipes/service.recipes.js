@@ -14,6 +14,7 @@ const getRecipes = async (req, res) => {
     `);
 
     // Modifica el JSON para incluir las rutas completas de las imágenes
+    //TODO: Mirar esto para hacer la buils en móvil serverUrl
     const serverUrl = "http://localhost:3000"; // Cambia esto por la URL real de tu servidor
     const recipesWithImageUrls = recipes.map((recipe) => {
       return {
@@ -22,12 +23,12 @@ const getRecipes = async (req, res) => {
       };
     });
     res.json(recipesWithImageUrls);
-   
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error en la base de datos" });
   }
 };
+
 const getRecipesWorld = async (req, res) => {
   try {
     const { recipeWorldType } = req.params;
@@ -49,7 +50,6 @@ const getRecipesWorld = async (req, res) => {
         imagenreceta: `${serverUrl}/${recipe.imagenreceta}`, // Modificado aquí
       };
     });
-
     res.json(recipesWithImageUrls);
   } catch (error) {
     console.error(error);
@@ -119,8 +119,7 @@ const getRecipesFullById = async (req, res) => {
 
     res.status(200).json(recipeDetails);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error en la base de datos" });
+    res.status(200).json({ error: "Error en el servidor" });
   }
 };
 
@@ -134,6 +133,7 @@ Además, asegúrate de manejar adecuadamente las relaciones en tu modelo de dato
 
 const getFilteredRecipes = async (req, res) => {
   let num_comensales;
+  let tipoRecetaList;
   const serverUrl = "http://localhost:3000"; // Cambia esto por la URL real de tu servidor
   try {
     const {
@@ -147,6 +147,7 @@ const getFilteredRecipes = async (req, res) => {
       comensales,
     } = req.query;
 
+    
     // Construir la consulta principal para obtener las recetas
     let queryRecipes = `
       SELECT
@@ -159,16 +160,15 @@ const getFilteredRecipes = async (req, res) => {
 
     // Agregar condiciones según los parámetros proporcionados
     if (tipoReceta && tipoReceta !== "no-aply") {
-      console.log("DEPURACION TIPO RECETA");
-      queryRecipes += ` AND r.tipo_receta =  $1`;
+    
+      tipoRecetaList = tipoReceta.split(',').map(type => `%${type}%`);
+      queryRecipes += ` AND r.tipo_receta LIKE ANY($1)`;
     }
     if (tiempoPreparacion && tiempoPreparacion !== "0") {
-      console.log("DEP PREPARACIO");
       queryRecipes += ` AND r.tiempo_preparacion >= $2`;
     }
 
     if (dificultad && dificultad !== "no-aply") {
-      console.log("DEP DIFICULTAD");
       queryRecipes += ` AND r.dificultad = $3`;
     }
 
@@ -179,7 +179,6 @@ const getFilteredRecipes = async (req, res) => {
     }
 
     if (tipoRecetaMundo && tipoRecetaMundo !== "no-aply") {
-      console.log("DEP TIPo RECETA MUNDO", tipoRecetaMundo);
       queryRecipes += ` AND r.tipo_receta_mundo = $4`;
     }
 
@@ -189,13 +188,12 @@ const getFilteredRecipes = async (req, res) => {
       } else {
         queryRecipes += ` AND i.nombre = ANY($5)`;
       }
-    }
+    }  
     if (puntuacion && puntuacion !== "99") {
-      console.log("DEP SCORE");
+    
       queryRecipes += `AND r.puntuacion <= $6`;
     }
     if (restric_alimentaria && restric_alimentaria !== "no-aply") {
-      console.log("DEP RESTRICCIO");
       queryRecipes += `AND r.restricciones_alimentos = $7`;
     }
 
@@ -204,7 +202,7 @@ const getFilteredRecipes = async (req, res) => {
 
     // Ejecutar la consulta para obtener las recetas
     const recipes = await db.any(queryRecipes, [
-      tipoReceta,
+      tipoRecetaList,
       tiempoPreparacion,
       dificultad,
       tipoRecetaMundo,
@@ -213,10 +211,8 @@ const getFilteredRecipes = async (req, res) => {
       restric_alimentaria,
       comensales,
     ]);
-    console.log(recipes, "Recipes!!");
-    const arraySend = [];
-    const finalResultofQuery = [];
-    console.log(recipes);
+    let arraySend = [];
+    let finalResultofQuery = [];
     for (let i = 0; i < recipes.length; i++) {
       let queryGood = `
         SELECT
@@ -236,14 +232,21 @@ const getFilteredRecipes = async (req, res) => {
 
       const detailedRecipe = await db.one(queryGood, [recipes[i].id]);
       detailedRecipe.imagenreceta = `${serverUrl}/${detailedRecipe.imagenreceta}`;
+      detailedRecipe.comensales=comensales;
       arraySend.push(detailedRecipe);
+      
     }
+if(!Array.isArray(ingredientes)) {
+  finalResultofQuery = arraySend;
+} else {
 
-    arraySend.forEach((recipeElement, index) => {
-      if (areIngredientsContained(recipeElement.ingredientes, ingredientes)) {
-        finalResultofQuery.push(recipeElement);
-      }
-    });
+  arraySend.forEach((recipeElement, index) => {
+    if (areIngredientsContained(recipeElement.ingredientes, ingredientes)) {
+      finalResultofQuery.push(recipeElement);
+    }
+  });
+}
+    
     res.status(200).json({ finalResultofQuery, comenFilter: num_comensales });
   } catch (error) {
     console.error(error);
@@ -254,6 +257,7 @@ const getFilteredRecipes = async (req, res) => {
 const createRecipe = async (req, res) => {
   try {
     // Extraer los parámetros del cuerpo de la solicitud
+    
     const {
       tipo_receta,
       tipo_receta_mundo,
@@ -306,7 +310,6 @@ const createRecipe = async (req, res) => {
         // Insertar los ingredientes de la receta
         const insercionesIngredientes = ingredientes.map(
           async (ingrediente) => {
-            console.log(ingrediente);
             const ingredienteId = await t.oneOrNone(
               "SELECT id FROM ingredientes WHERE nombre = $1 LIMIT 1",
               [ingrediente.ingredient]
@@ -394,7 +397,6 @@ const getRecipeImageBase64 = async (req, res) => {
     );
     const base64Image = fs.readFileSync(imagePath, { encoding: "base64" });
     const base64Logo = fs.readFileSync(imageLogoPath, { encoding: "base64" });
-    console.log(result.imagenreceta);
     res.json({ base64: base64Image, base64Logo: base64Logo });
   } catch (error) {
     console.error(error);

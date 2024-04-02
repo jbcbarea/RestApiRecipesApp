@@ -20,7 +20,7 @@ const getAllIngredients = async (req, res) => {
     res.status(200).json({ ingredientes: ingredientesPorTipo });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Error en la base de datos' });
+    return res.status(500).json({ error: 'Error en la base de datos' });
   }
 };
 
@@ -29,9 +29,6 @@ const getAllIngredientsName = async (req,res) => {
     // Realizar una consulta a la base de datos para obtener solo los nombres de ingredientes
     const result = await db.any('SELECT nombre FROM ingredientes');
 
-    console.log('RESULT!!!',result);
-    // Extraer solo los nombres y devolverlos como un array
-    //Me lo saca por carnes y todo eso muy bien asi
     const ingredientNames = result.map(row => row.nombre);
 
     res.status(200).json(ingredientNames);

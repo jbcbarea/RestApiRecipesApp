@@ -35,13 +35,11 @@ const login = async (email, password) => {
 const register = async (name, email, phone, password) => {
     try {
         const existingUser = await db.oneOrNone('SELECT * FROM usuarios WHERE email = $1', [email]);
-        console.log('ExistingUser',existingUser);
         if (existingUser !== null) {
             return 'El email ya está registrado';
         }
-        console.log('pasa por aquii!!');
+  
         const hashedPassword = await bcrypt.hash(password, 10);
-        console.log(hashedPassword);
         await db.none('INSERT INTO usuarios (nombre, email, telefono, contrasena, rol) VALUES ($1, $2, $3, $4, $5)', [name, email, phone, hashedPassword, 'user']);
         return 'Registro exitoso';
     } catch (error) {
@@ -68,7 +66,7 @@ const transporter = nodemailer.createTransport({
     port: 587,
     secure: false,
     auth: {
-      user: 'AdmRecipEasy@hotmail.com',
+      user: 'admrecipeasy@hotmail.com',
       pass: 'Recipeasy24',
     },
     tls: {
@@ -100,14 +98,13 @@ const transporter = nodemailer.createTransport({
   };
   
   const requestPasswordReset = async (email) => {
-    try {
-
-      console.log(email);
-   
+    try {   
       const user = await db.oneOrNone('SELECT * FROM usuarios WHERE email = $1', [email]);
       if (!user) {
         return 'Usuario no encontrado';
-      }
+      } else {
+
+      
   
       const resetToken = generateSecureToken();
       const hashedPassword = await bcrypt.hash(resetToken, 10);
@@ -118,6 +115,7 @@ const transporter = nodemailer.createTransport({
       sendPasswordResetEmail(email, resetPassword);
   
       return 'Se ha enviado un correo electrónico con instrucciones para restablecer la contraseña';
+      }
     } catch (error) {
       throw new Error('Error al solicitar el restablecimiento de contraseña');
     }

@@ -21,7 +21,7 @@ const uploadFiles = (express) => {
     router
     .post('/',  upload.single('image'), async (req,res) =>{
         const fileName = req.file;
-        console.log(fileName);
+       
         //Aqui ya meterlo en basse de datos con toda la consulta??
         res.status(200).json(fileUploadService.uploadImage(fileName));
     })

@@ -24,8 +24,7 @@ const addFavouriteRecipe = async (req, res) => {
     try {
       const { userEmail, recipeId } = req.query;
 
-      console.log(userEmail);
-      console.log(recipeId);
+  
   
       // Comprueba si la receta ya está marcada como favorita para el usuario
       const isFavourite = await db.oneOrNone(
@@ -55,8 +54,7 @@ const addFavouriteRecipe = async (req, res) => {
     try {
       const { userEmail, recipeId } = req.query;
       
-      console.log(userEmail);
-      console.log(recipeId);
+    
       // Verifica si la receta está marcada como favorita para el usuario
       const isFavorita = await db.oneOrNone(
         'SELECT id FROM recetas_favoritas WHERE usuario_email = $1 AND receta_id = $2',
@@ -83,7 +81,6 @@ const addFavouriteRecipe = async (req, res) => {
   const getFavouriteRecipesForUser = async (req, res) => {
     try {
       const { userEmail } = req.query;
-      console.log(userEmail);
       const favouriteRecipes = await db.any(`
         SELECT recetas.id, recetas.nombrereceta, recetas.tipo_receta, recetas.tiempo_preparacion, recetas.dificultad, recetas.puntuacion, recetas.comensales, recetas.imagenreceta, recetas_favoritas.favorita
         FROM recetas_favoritas

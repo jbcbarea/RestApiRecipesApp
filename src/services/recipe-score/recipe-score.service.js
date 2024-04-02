@@ -1,7 +1,7 @@
 //const pgp = require("pg-promise")();
 //const db = pgp("postgres://postgres:admin@localhost:5432/test");
 
-const {db} = require('../../dB/dB.js');
+const { db } = require("../../dB/dB.js");
 
 const getRecipesScoreById = async (req, res) => {
   //TODO: LLamar a este para que lo meta en base de datos en recetas ahora
@@ -69,13 +69,8 @@ const getRecipesScoreByUser = async (req, res) => {
 
 const addRecipeScoreByUser = async (req, res) => {
   try {
-
-    const {recipeId,userEmail,recipeScoring} = req.query;
-    console.log(req.query);
-
+    const { recipeId, userEmail, recipeScoring } = req.query;
     //TODO: Lo tengo que meter en puntuaciones aquí también
-
-
     const result = await db.one(
       "INSERT INTO puntuaciones_recetas (receta_id, usuario_mail, puntuacion, votos) VALUES ($1,$2, $3,1)  RETURNING *",
       [recipeId, userEmail, recipeScoring]
@@ -88,7 +83,7 @@ Cuando utilizas RETURNING *, la consulta devuelve los datos del nuevo registro q
    modificado por la base de datos (por ejemplo, un ID automático o una marca de tiempo).
     */
 
-    res.json({ message: "Receta puntuada correctamente",result:result});
+    res.json({ message: "Receta puntuada correctamente", result: result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error en la base de datos" });
@@ -98,14 +93,11 @@ Cuando utilizas RETURNING *, la consulta devuelve los datos del nuevo registro q
 const deleteRecipeScoreByUser = async (req, res) => {
   try {
     const { recipeId, userEmail } = req.query;
-
-      await db.none(
-        "DELETE FROM puntuaciones_recetas WHERE receta_id = $1 AND usuario_mail = $2",
-        [recipeId, userEmail]
-      );
-
-      res.json({ message: "Puntuación eliminada correctamente." });
-    
+    await db.none(
+      "DELETE FROM puntuaciones_recetas WHERE receta_id = $1 AND usuario_mail = $2",
+      [recipeId, userEmail]
+    );
+    res.json({ message: "Puntuación eliminada correctamente." });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error en la base de datos" });
@@ -115,19 +107,16 @@ const deleteRecipeScoreByUser = async (req, res) => {
 const updateRecipeScoreByUser = async (req, res) => {
   try {
     const { recipeId, userEmail, newRecipeScoring } = req.query;
-
-   
     const existingVote = await db.oneOrNone(
       "SELECT id, puntuacion, votos FROM puntuaciones_recetas WHERE receta_id = $1 AND usuario_mail = $2",
       [recipeId, userEmail]
     );
 
     if (!existingVote) {
-      res
-        .status(404)
-        .json({
-          message: "La receta aún no ha sido puntuada por este usuario.",
-        });
+      res.status(404).json({
+        message: "La receta aún no ha sido puntuada por este usuario.",
+      });
+      
     } else {
       const updatedVote = await db.one(
         "UPDATE puntuaciones_recetas SET puntuacion = $1 WHERE id = $2 RETURNING puntuacion, votos",
